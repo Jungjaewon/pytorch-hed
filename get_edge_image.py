@@ -2,8 +2,11 @@ import numpy as np
 import PIL.Image
 import os.path as osp
 import torch
+import os
+
 from glob import glob
 from tqdm import tqdm
+
 
 
 assert(int(str('').join(torch.__version__.split('.')[0:2])) >= 13) # requires at least pytorch version 1.3.0
@@ -129,6 +132,8 @@ if __name__ == '__main__':
     base_dir = '/home/ubuntu/research_j/TailorGAN_v1/'
     source_dir = osp.join(base_dir,'tailor_dataset')
     target_dir = osp.join(base_dir,'tailor_dataset_hed')
+
+    os.makedirs(target_dir, exist_ok=True)
 
     for img_path in tqdm(glob(osp.join(source_dir, '*'))):
         img_name = osp.basename(img_path).replace('.jpg', '_hed.jpg')
