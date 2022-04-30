@@ -137,9 +137,8 @@ if __name__ == '__main__':
 
     for img_path in tqdm(glob(osp.join(source_dir, '*'))):
         img_name = osp.basename(img_path).replace('.jpg', '_hed.jpg')
-        img = PIL.Image.open(img_path)
+        img = PIL.Image.open(img_path).convert('RGB')
         target_path = osp.join(target_dir, img_name)
-        tenInput = torch.FloatTensor(np.ascontiguousarray(np.array(img)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (
-                    1.0 / 255.0)))
+        tenInput = torch.FloatTensor(np.ascontiguousarray(np.array(img)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0)))
         tenOutput = estimate(tenInput)
         PIL.Image.fromarray((tenOutput.clip(0.0, 1.0).numpy().transpose(1, 2, 0)[:, :, 0] * 255.0).astype(np.uint8)).save(target_path)
