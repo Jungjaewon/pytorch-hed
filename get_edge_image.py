@@ -79,7 +79,7 @@ class Network(torch.nn.Module):
         self.load_state_dict({ strKey.replace('module', 'net'): tenWeight for strKey, tenWeight in torch.hub.load_state_dict_from_url(url='http://content.sniklaus.com/github/pytorch-hed/network-' + 'bsds500' + '.pytorch', file_name='hed-' + 'bsds500').items() })
     # end
 
-    def forward(self, tenInput):
+    def forward(self, tenInput, print_size=False):
         tenInput = tenInput * 255.0
         tenInput = tenInput - torch.tensor(data=[104.00698793, 116.66876762, 122.67891434], dtype=tenInput.dtype, device=tenInput.device).view(1, 3, 1, 1)
 
@@ -101,6 +101,13 @@ class Network(torch.nn.Module):
         tenScoreFou = torch.nn.functional.interpolate(input=tenScoreFou, size=(tenInput.shape[2], tenInput.shape[3]), mode='bilinear', align_corners=False)
         tenScoreFiv = torch.nn.functional.interpolate(input=tenScoreFiv, size=(tenInput.shape[2], tenInput.shape[3]), mode='bilinear', align_corners=False)
 
+        if print_size:
+            print(f'tenScoreOne : {tenScoreOne.size()}')
+            print(f'tenScoreTwo : {tenScoreTwo.size()}')
+            print(f'tenScoreThr : {tenScoreThr.size()}')
+            print(f'tenScoreFou : {tenScoreFou.size()}')
+            print(f'tenScoreFiv : {tenScoreFiv.size()}')
+
         return self.netCombine(torch.cat([ tenScoreOne, tenScoreTwo, tenScoreThr, tenScoreFou, tenScoreFiv ], 1))
     # end
 # end
@@ -109,7 +116,7 @@ netNetwork = None
 
 ##########################################################
 
-def estimate(tenInput):
+def estimate(tenInput, print_size=False):
     global netNetwork
 
     if netNetwork is None:
@@ -122,16 +129,16 @@ def estimate(tenInput):
     #assert(intWidth == 480) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
     #assert(intHeight == 320) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
 
-    return netNetwork(tenInput.cuda().view(1, 3, intHeight, intWidth))[0, :, :, :].cpu()
+    return netNetwork(tenInput.cuda().view(1, 3, intHeight, intWidth), print_size)[0, :, :, :].cpu()
 # end
 
 ##########################################################
 
-if __name__ == '__main__':
 
+def processing_tailor():
     base_dir = '/home/ubuntu/research_j/TailorGAN_v1/'
-    source_dir = osp.join(base_dir,'tailor_dataset')
-    target_dir = osp.join(base_dir,'tailor_dataset_hed')
+    source_dir = osp.join(base_dir, 'tailor_dataset')
+    target_dir = osp.join(base_dir, 'tailor_dataset_hed')
 
     os.makedirs(target_dir, exist_ok=True)
 
@@ -139,6 +146,41 @@ if __name__ == '__main__':
         img_name = osp.basename(img_path).replace('.jpg', '_hed.jpg')
         img = PIL.Image.open(img_path).convert('RGB')
         target_path = osp.join(target_dir, img_name)
-        tenInput = torch.FloatTensor(np.ascontiguousarray(np.array(img)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0)))
+        tenInput = torch.FloatTensor(
+            np.ascontiguousarray(np.array(img)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0)))
         tenOutput = estimate(tenInput)
-        PIL.Image.fromarray((tenOutput.clip(0.0, 1.0).numpy().transpose(1, 2, 0)[:, :, 0] * 255.0).astype(np.uint8)).save(target_path)
+        PIL.Image.fromarray(
+            (tenOutput.clip(0.0, 1.0).numpy().transpose(1, 2, 0)[:, :, 0] * 255.0).astype(np.uint8)).save(target_path)
+
+
+def processing_face():
+
+    base_dir = 'CelebA-HQ-img'
+
+    for img_path in tqdm(glob(osp.join(base_dir, '*.jpg'))):
+        img_name = osp.basename(img_path)
+        if '_' in img_name:
+            continue
+
+        img = PIL.Image.open(img_path).convert('RGB')
+        target_path = osp.join(base_dir, img_name.replace('.jpg', '_hed.jpg'))
+        tenInput = torch.FloatTensor(
+            np.ascontiguousarray(np.array(img)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0)))
+        tenOutput = estimate(tenInput)
+        PIL.Image.fromarray(
+            (tenOutput.clip(0.0, 1.0).numpy().transpose(1, 2, 0)[:, :, 0] * 255.0).astype(np.uint8)).save(target_path)
+
+def test():
+
+    img = PIL.Image.open('test.jpg').convert('RGB')
+    tenInput = torch.FloatTensor(
+        np.ascontiguousarray(np.array(img)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0)))
+    tenOutput = estimate(tenInput, print_size=True)
+
+
+if __name__ == '__main__':
+    pass
+    #processing_tailor()
+    #processing_face()
+    test()
+
