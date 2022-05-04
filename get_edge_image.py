@@ -176,6 +176,7 @@ def test():
     tenInput = torch.FloatTensor(
         np.ascontiguousarray(np.array(img)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0)))
     tenOutput = estimate(tenInput, print_size=True)
+    print(f'tenOutput :  {tenOutput.size()}')
 
 
 if __name__ == '__main__':
