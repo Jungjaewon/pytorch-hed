@@ -3,6 +3,7 @@ import PIL.Image
 import os.path as osp
 import torch
 import os
+import cv2
 
 from glob import glob
 from tqdm import tqdm
@@ -155,23 +156,29 @@ def processing_tailor():
 
 def processing_face():
 
-    base_dir = 'CelebA-HQ-img'
+    base_dir = 'datasets'
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
-    for img_path in tqdm(glob(osp.join(base_dir, '*.jpg'))):
+    for img_path in tqdm(glob(osp.join(base_dir, '*', '*.jpg'))):
         img_name = osp.basename(img_path)
         if '_' in img_name:
             continue
 
-        img = PIL.Image.open(img_path).convert('RGB')
         target_path = osp.join(base_dir, img_name.replace('.jpg', '_hed.jpg'))
+
+        img = cv2.imread(img_path)
+        clahe_img = clahe.apply(img)
+        cv2.imwrite(clahe_img, target_path)
+
+        img = PIL.Image.open(target_path).convert('RGB')
         tenInput = torch.FloatTensor(
             np.ascontiguousarray(np.array(img)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0)))
         tenOutput = estimate(tenInput)
         PIL.Image.fromarray(
             (tenOutput.clip(0.0, 1.0).numpy().transpose(1, 2, 0)[:, :, 0] * 255.0).astype(np.uint8)).save(target_path)
 
-def test():
 
+def test():
     img = PIL.Image.open('test.jpg').convert('RGB')
     tenInput = torch.FloatTensor(
         np.ascontiguousarray(np.array(img)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0)))
@@ -181,7 +188,7 @@ def test():
 
 if __name__ == '__main__':
     pass
-    #processing_tailor()
+    processing_tailor()
     #processing_face()
-    test()
+    #test()
 
