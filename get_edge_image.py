@@ -165,6 +165,7 @@ def processing_face():
             continue
 
         target_path = osp.join(osp.dirname(img_path), img_name.replace('.jpg', '_hed.jpg'))
+        print(target_path)
 
         img = cv2.imread(img_path, 0)
         clahe_img = clahe.apply(img)
