@@ -188,7 +188,7 @@ def test():
 
 if __name__ == '__main__':
     pass
-    processing_tailor()
-    #processing_face()
+    #processing_tailor()
+    processing_face()
     #test()
 
