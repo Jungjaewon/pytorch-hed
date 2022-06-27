@@ -165,11 +165,10 @@ def processing_face():
             continue
 
         target_path = osp.join(osp.dirname(img_path), img_name.replace('.jpg', '_hed.jpg'))
-        print(target_path)
 
         img = cv2.imread(img_path, 0)
         clahe_img = clahe.apply(img)
-        cv2.imwrite(clahe_img, target_path)
+        cv2.imwrite(target_path, clahe_img)
 
         img = PIL.Image.open(target_path).convert('RGB')
         tenInput = torch.FloatTensor(
