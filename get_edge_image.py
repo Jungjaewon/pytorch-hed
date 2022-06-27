@@ -156,7 +156,7 @@ def processing_tailor():
 
 def processing_face():
 
-    base_dir = 'datasets'
+    base_dir = '/home/ubuntu/research_j/SC_FEGAN_pytorch/datasets'
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
     for img_path in tqdm(glob(osp.join(base_dir, '*', '*.jpg'))):
